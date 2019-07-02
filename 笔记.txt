@@ -1,0 +1,84 @@
+- 插槽(slot)
+          - 用于内容的分发，允许在一个组件中，在你调用的时候自定义组件中某个或多个区域的内容
+          匿名插槽: 直接用slot标签，在slot标签里写内容
+          具名插槽: 添加name属性，使用的时候 slot='name'
+
+    - axios(基于promise封装的ajax请求库)
+      - 安装方法:
+        npm i -S axios
+        npm i -S qs (处理post请求的参数)
+      - 封装ajax方法，写在一个单独的js文件中，post请求我们会用qs这个库处理
+      - 全局配置axios
+        - 设置默认的请求超时时间。例如超过了10s，就会告知用户当前请求超时，请刷新等
+          axios.defaults.timeout = 10000
+
+        - 设置post的请求头为application/x-www-form-urlencoded;charset=UTF-8
+          axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
+
+        - 请求数据拦截(一般用作在每个请求上加token)
+            instance.interceptors.request.use( config => {
+               const token = store.state.token;
+               token && (config.headers.Authorization = token);
+               return config
+            }, error => {
+                return Promise.reject(error)
+            })
+
+        - 响应拦截
+          axios.interceptors.response.use(
+           response => {
+           // 如果返回的状态码为200，说明接口请求成功，可以正常拿到数据
+           // 否则的话抛出错误
+           if (response.status === 200) {
+            return Promise.resolve(response);
+           } else {
+            return Promise.reject(response);
+           }
+           }
+
+        - 跨域配置
+          在根目录下创建一个vue.config.js
+          devServer: {
+              proxy: {
+                '/api': {
+                  ws: false,
+                  target: 'http://localhost:3000',
+                  changeOrigin: true,
+                  pathRewrite: {
+                    '^/api': ''
+                  }
+                }
+              }
+            }
+vuex
+  - 全局状态管理
+     - 集中管理数据，存储数据，改变数据，获取数据，异步操作
+     - 状态集中管理，数据在每一个组件都可以使用，方便简洁
+
+  - 文件结构
+    - store
+        - state.js
+           - 所有要集中管理的数据
+           - 在组件中通过计算属性获取
+        - mutation-types.js
+           - mutations的别名
+        - mutation.js
+           - 操作数据的方法
+             是一个函数，第一个参数为state，第二个参数为改变后的数据
+             state为集中管理的数据，改变的是state里的数据
+             通过this.$store.commit('方法名')调用
+        - getters.js
+           - 获取所有数据
+           - 获取的是state里面的数据
+        - actions.js
+           - 所有异步操作数据的方法
+           - 异步操作mutations里面的方法
+             async getCategorys({commit}) {
+                 // 发送异步ajax请求
+                 const result = await reqFoodCategorys()
+                 // 提交一个mutation
+                 if (result.code === 0) {
+                   const categorys = result.data
+                   commit(RECEIVE_CATEGORYS, {categorys})
+                 }
+               }
